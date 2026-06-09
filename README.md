@@ -12,7 +12,7 @@ assistant, built to run a between-subjects experiment on **AI autonomy level**.
 | **C3** | Control (no AI) | No AI. The user **searches, browses, and books** a stay manually. |
 
 All three conditions converge on the same booked stay (**Riverview Stay Hotel**,
-₩142,000, non-refundable), then receive the same negative post-booking feedback, then a
+$142, non-refundable), then receive the same negative post-booking feedback, then a
 debriefing. There is **no survey** — this is the booking experience itself.
 
 ## Running

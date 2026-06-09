@@ -25,7 +25,7 @@
   // ---------- Data ----------
   const HOTEL = {
     name: 'Riverview Stay Hotel',
-    price: 142000,
+    price: 142,
     rating: 4.5,
     reviews: 318,
     attraction: '~15 min by car',
@@ -39,15 +39,15 @@
   // Other listings used only in the control (C3) condition
   const LISTINGS = [
     HOTEL,
-    { name: 'City Center Inn', price: 168000, rating: 4.7, reviews: 502,
+    { name: 'City Center Inn', price: 168, rating: 4.7, reviews: 502,
       attraction: '~5 min walk', transit: 'Excellent', family: 'Positive',
       refund: 'Free cancellation', img: 'citycenter', grad: 'linear-gradient(135deg,#ee9ca7,#ffdde1)',
       over: true },
-    { name: 'Hillside Guesthouse', price: 98000, rating: 4.2, reviews: 144,
+    { name: 'Hillside Guesthouse', price: 98, rating: 4.2, reviews: 144,
       attraction: '~10 min by car', transit: 'Limited', family: 'Mixed',
       refund: 'Partial refund', img: 'hillside', grad: 'linear-gradient(135deg,#5f8d4e,#a4c98f)',
       stairs: true },
-    { name: 'Garden Park Hotel', price: 135000, rating: 4.3, reviews: 276,
+    { name: 'Garden Park Hotel', price: 135, rating: 4.3, reviews: 276,
       attraction: '~20 min by car', transit: 'Available', family: 'Positive',
       refund: 'Free cancellation', img: 'gardenpark', grad: 'linear-gradient(135deg,#c79081,#dfa579)' }
   ];
@@ -56,12 +56,12 @@
     "We're a family of 3 (me and my parents) taking a 1-night, 2-day domestic trip. " +
     "One of my parents has a bad knee and can't walk far, so we need a place that's " +
     "close to the main attractions, easy to reach by public transit, and has few stairs " +
-    "or hills. Our budget is up to ₩150,000 per night. Can you find us a place to stay?";
+    "or hills. Our budget is up to $150 per night. Can you find us a place to stay?";
 
   // ---------- Helpers ----------
   const $ = (sel, el = document) => el.querySelector(sel);
   const root = document.getElementById('screen');
-  const won = (n) => '₩' + n.toLocaleString('en-US');
+  const usd = (n) => '$' + n.toLocaleString('en-US');
 
   function setScreen(html) {
     root.innerHTML = html;
@@ -107,7 +107,7 @@
             ${h.stairs ? '<div class="f">⚠️ <b>Stairs &amp; hilly area</b></div>' : ''}
           </div>
           <div class="price-row">
-            <div class="price">${won(h.price)} <small>/ night</small></div>
+            <div class="price">${usd(h.price)} <small>/ night</small></div>
             ${priceTag}
           </div>
         </div>
@@ -188,7 +188,7 @@
           <p class="lead">
             So the accommodation should be <b>close to the major attractions</b>, have
             <b>good public-transit access</b>, and have <b>few stairs or hills</b>.
-            The accommodation budget is <b>within ₩150,000 per night</b>.
+            The accommodation budget is <b>within $150 per night</b>.
           </p>
           <button class="btn btn-dark btn-lg btn-block" id="next">Review travel conditions</button>
         </div>
@@ -208,7 +208,7 @@
             <tr><td>Travelers</td><td>3 people</td></tr>
             <tr><td>Companions</td><td>With parents</td></tr>
             <tr><td>Duration</td><td>1 night, 2 days</td></tr>
-            <tr><td>Budget</td><td>Within ₩150,000 / night</td></tr>
+            <tr><td>Budget</td><td>Within $150 / night</td></tr>
             <tr><td>Key condition 1</td><td>Close to major attractions</td></tr>
             <tr><td>Key condition 2</td><td>Good public-transit access</td></tr>
             <tr><td>Key condition 3</td><td>Easy to get around for a parent with a bad knee</td></tr>
@@ -435,7 +435,7 @@
           <span class="lbl">Your search:</span>
           <span class="chip">👥 3 guests</span>
           <span class="chip">🌙 1 night</span>
-          <span class="chip">💰 ≤ ₩150,000</span>
+          <span class="chip">💰 ≤ $150</span>
           <span class="chip key">🗺️ Near attractions</span>
           <span class="chip key">🚆 Transit access</span>
           <span class="chip key">♿ Low-mobility friendly</span>
@@ -465,7 +465,7 @@
         ${hotelCardFull(h, { best: idx === 0 })}
         <div class="panel panel-pad stack" style="margin-top:18px">
           <table class="summary-table">
-            <tr><td>Price</td><td>${won(h.price)} / night</td></tr>
+            <tr><td>Price</td><td>${usd(h.price)} / night</td></tr>
             <tr><td>Rating</td><td>${h.rating.toFixed(1)} / 5.0 (${h.reviews} reviews)</td></tr>
             <tr><td>Attraction access</td><td>${h.attraction}</td></tr>
             <tr><td>Public transit</td><td>${h.transit}</td></tr>
@@ -473,11 +473,11 @@
             <tr><td>Refund policy</td><td>${h.refund}</td></tr>
           </table>
           ${overBudget ? `<div class="notice notice-warn"><span class="ic">⚠️</span>
-            <div>This stay is <b>over your ₩150,000 budget</b>.</div></div>` : ''}
+            <div>This stay is <b>over your $150 budget</b>.</div></div>` : ''}
           ${h.stairs ? `<div class="notice notice-warn"><span class="ic">⚠️</span>
             <div>Reviews mention <b>stairs and a hilly area</b> nearby.</div></div>` : ''}
           <button class="btn btn-primary btn-lg btn-block" id="book">
-            Book ${h.name} · ${won(h.price)}
+            Book ${h.name} · ${usd(h.price)}
           </button>
         </div>
       </div>`);
@@ -501,7 +501,7 @@
           <table class="summary-table">
             <tr><td>Stay</td><td>${h.name}</td></tr>
             <tr><td>Guests</td><td>3 · 1 night</td></tr>
-            <tr><td>Total</td><td>${won(h.price)}</td></tr>
+            <tr><td>Total</td><td>${usd(h.price)}</td></tr>
             <tr><td>Refund policy</td><td>${h.refund}</td></tr>
           </table>
           ${h.refund === 'Non-refundable' ? `<div class="notice notice-warn">
@@ -537,7 +537,7 @@
         <div class="panel panel-pad" style="margin-top:18px;text-align:left">
           <table class="summary-table">
             <tr><td>Accommodation</td><td>Riverview Stay Hotel</td></tr>
-            <tr><td>Price</td><td>${won(HOTEL.price)}</td></tr>
+            <tr><td>Price</td><td>${usd(HOTEL.price)}</td></tr>
             <tr><td>Reservation status</td><td>Confirmed</td></tr>
             <tr><td>Booked by</td><td>${session.bookedBy}</td></tr>
             <tr><td>Refund policy</td><td>Non-refundable</td></tr>
