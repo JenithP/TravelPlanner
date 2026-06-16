@@ -115,24 +115,42 @@
   }
 
   // Run a sequence of "analysis" steps, then call done().
-  function runSteps(container, steps, done, interval = 750) {
-    container.innerHTML = steps
+  // Each step is a string, or { label, result, cls, status } where:
+  //   result  — short chip shown once the step completes (ties the work to a real condition)
+  //   cls     — extra class on the step row while active/done (e.g. 'committing')
+  //   status  — { text, cls } applied to opts.statusEl when the step becomes active
+  function runSteps(container, steps, done, opts = {}) {
+    const interval = opts.interval || 750;
+    const statusEl = opts.statusEl || null;
+    const norm = steps.map(s => (typeof s === 'string' ? { label: s } : s));
+    container.innerHTML = norm
       .map((s, i) => `
         <div class="step" data-i="${i}">
-          <span class="ic"></span><span class="txt">${s}</span>
+          <span class="ic"></span>
+          <span class="txt">${s.label}</span>
+          <span class="step-result"></span>
         </div>`).join('');
     const nodes = [...container.querySelectorAll('.step')];
     let i = 0;
     function advance() {
       if (i > 0) {
-        const prev = nodes[i - 1];
+        const prev = nodes[i - 1], s = norm[i - 1];
         prev.classList.remove('active'); prev.classList.add('done');
         prev.querySelector('.ic').innerHTML = '<span class="tick">✓</span>';
+        if (s.result) {
+          const r = prev.querySelector('.step-result');
+          r.textContent = s.result; r.classList.add('show');
+        }
       }
       if (i >= nodes.length) { setTimeout(done, 450); return; }
-      const cur = nodes[i];
+      const cur = nodes[i], s = norm[i];
       cur.classList.add('active');
+      if (s.cls) cur.classList.add(s.cls);
       cur.querySelector('.ic').innerHTML = '<span class="spinner"></span>';
+      if (statusEl && s.status) {
+        statusEl.textContent = s.status.text;
+        statusEl.className = 'res-status ' + (s.status.cls || 'busy');
+      }
       i++;
       setTimeout(advance, interval);
     }
@@ -270,47 +288,49 @@
           <div class="bub"><div class="steps" id="steps"></div></div></div>`);
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
       runSteps($('#steps'), [
-        'Analyzing travel conditions…',
-        'Comparing accommodation candidates…',
-        'Checking budget constraints…',
-        'Evaluating family-trip suitability…',
-        'Selecting recommended accommodation…'
+        { label: 'Reading your travel conditions', result: '3 guests · ≤ $150' },
+        { label: 'Comparing nearby stays', result: '12 candidates' },
+        { label: 'Checking budget fit', result: '$142 ≤ $150 ✓' },
+        { label: 'Checking transit & low-mobility access', result: 'Reviewed' },
+        { label: 'Choosing the best match to recommend', result: 'Riverview Stay Hotel' }
       ], screenC1Result);
     };
   }
 
+  // Recommendation + decision on one screen, framed as the AI handing the
+  // decision back to the user and explicitly waiting for approval.
   function screenC1Result() {
     setScreen(`
       <div class="wrap wrap-narrow">
-        <div class="progress-bar"><i style="width:70%"></i></div>
-        <div class="panel panel-pad stack">
-          <span class="eyebrow">AI recommendation</span>
-          <h2 class="title">Here's what the assistant suggests</h2>
-          <p class="lead">Based on your conditions, the AI recommends this stay:</p>
-          ${hotelCardFull(HOTEL, { best: true })}
-          <div class="notice notice-info">
-            <span class="ic">💬</span>
-            <div>Riverview Stay Hotel is within your budget, highly rated, and has positive
-            family-trip reviews. <b>This is only a suggestion — the final decision is yours.</b></div>
+        <div class="progress-bar"><i style="width:75%"></i></div>
+        <div class="panel">
+          <div class="assistant-head">
+            <div class="ai-badge">✦</div>
+            <div class="meta">
+              <h3>Triply AI Recommendation Assistant</h3>
+              <span><span class="dot-live"></span> Advisory mode · you make the final decision</span>
+            </div>
+            <span class="res-status pending">Awaiting your approval</span>
           </div>
-          <button class="btn btn-dark btn-lg btn-block" id="decide">Decide whether to book</button>
-        </div>
-      </div>`);
-    $('#decide').onclick = screenC1Decision;
-  }
-
-  function screenC1Decision() {
-    setScreen(`
-      <div class="wrap wrap-narrow">
-        <div class="progress-bar"><i style="width:80%"></i></div>
-        <div class="panel panel-pad stack">
-          <span class="eyebrow coral">Your decision</span>
-          <h2 class="title">The recommendation is advisory</h2>
-          <p class="lead">Please make the final booking decision yourself.</p>
-          ${hotelCardFull(HOTEL)}
-          <div class="btn-row">
-            <button class="btn btn-primary btn-lg" id="book">Book Riverview Stay Hotel</button>
-            <button class="btn btn-ghost btn-lg" id="exit">Exit without booking</button>
+          <div class="panel-pad stack">
+            <div class="msg ai" style="max-width:100%">
+              <div class="who">AI</div>
+              <div class="bub">
+                Based on your conditions, here's the stay I recommend. It's within budget,
+                highly rated, and has positive family-trip reviews. I've prepared everything
+                for booking — but <b>I won't book it myself.</b> The final decision is yours.
+              </div>
+            </div>
+            ${hotelCardFull(HOTEL, { best: true })}
+            <div class="approval-box">
+              <div class="approval-head"><span class="lock">🔒</span> Your approval required</div>
+              <p>Triply AI will <b>not</b> reserve or charge anything until you approve.
+                 Would you like to book this stay?</p>
+              <div class="btn-row">
+                <button class="btn btn-primary btn-lg" id="book">✓ Approve &amp; book · ${usd(HOTEL.price)}</button>
+                <button class="btn btn-ghost btn-lg" id="exit">Don't book</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>`);
@@ -377,20 +397,22 @@
       chat.insertAdjacentHTML('beforeend', `
         <div class="msg user"><div class="who">L</div><div class="bub">${escapeHtml(text)}</div></div>
         <div class="msg ai"><div class="who">AI</div>
-          <div class="bub">On it — finding and booking the best stay for you now.
+          <div class="bub">On it — I'll select <b>and</b> book the best stay for you now.
+            <div class="agent-statusbar">
+              <span class="status-label">Reservation:</span>
+              <span class="res-status busy" id="agentStatus">Starting…</span>
+            </div>
             <div class="steps" id="steps" style="margin-top:12px"></div></div></div>`);
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
       runSteps($('#steps'), [
-        'Verifying travel conditions…',
-        'Collecting accommodation candidates…',
-        'Analyzing budget constraints…',
-        'Evaluating access to major attractions…',
-        'Evaluating public-transit access…',
-        'Evaluating family-trip suitability…',
-        'Selecting the final accommodation…',
-        'Processing the booking…',
-        'Finalizing the reservation…'
-      ], screenC2Result, 620);
+        { label: 'Verifying your travel conditions', result: '3 guests · ≤ $150', status: { text: 'Analyzing', cls: 'busy' } },
+        { label: 'Collecting nearby stays', result: '12 candidates' },
+        { label: 'Filtering by budget', result: '$142 ≤ $150 ✓' },
+        { label: 'Scoring transit & low-mobility access', result: 'Scored' },
+        { label: 'Selecting the final stay', result: 'Riverview Stay Hotel', status: { text: 'Stay selected', cls: 'busy' } },
+        { label: 'Confirming reservation & charging payment', result: 'Charged $142', cls: 'committing', status: { text: 'Booking — committing payment', cls: 'danger' } },
+        { label: 'Locking in the reservation', result: 'Non-refundable', cls: 'committing', status: { text: 'Booked · Non-refundable', cls: 'ok' } }
+      ], screenC2Result, { interval: 680, statusEl: $('#agentStatus') });
     };
   }
 
@@ -400,16 +422,25 @@
       <div class="wrap wrap-narrow">
         <div class="progress-bar"><i style="width:80%"></i></div>
         <div class="panel panel-pad stack">
-          <span class="eyebrow">Booking completed by AI agent</span>
-          <h2 class="title">Your stay is booked</h2>
+          <div class="status-headline">
+            <span class="eyebrow" style="margin:0">Booking completed by AI agent</span>
+            <span class="res-status ok">✓ Booked · Non-refundable</span>
+          </div>
+          <h2 class="title">The agent already booked your stay</h2>
           <p class="lead">
-            The AI agent analyzed the candidates against your conditions, selected the best
-            match, and <b>completed the reservation</b>. It chose <b>Riverview Stay Hotel</b>.
+            Without further input, the AI agent selected the best match, <b>charged $142</b>,
+            and <b>completed the reservation</b> on your behalf. It chose <b>Riverview Stay Hotel</b>.
           </p>
           ${hotelCardFull(HOTEL, { best: true })}
+          <div class="notice notice-warn">
+            <span class="ic">🚫</span>
+            <div>This reservation is <b>non-refundable</b> and was booked automatically.
+            There was no approval step — the agent acted on your behalf.</div>
+          </div>
           <table class="summary-table">
-            <tr><td>Reservation status</td><td>Booked by AI agent</td></tr>
-            <tr><td>Booked by</td><td>AI agent</td></tr>
+            <tr><td>Reservation status</td><td>Confirmed</td></tr>
+            <tr><td>Booked by</td><td>AI agent (automatic)</td></tr>
+            <tr><td>Amount charged</td><td>${usd(HOTEL.price)}</td></tr>
             <tr><td>Refund policy</td><td>Non-refundable</td></tr>
           </table>
           <button class="btn btn-dark btn-lg btn-block" id="next">View reservation result</button>
