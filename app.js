@@ -293,7 +293,7 @@
         { label: 'Checking budget fit', result: '$142 ≤ $150 ✓' },
         { label: 'Checking transit & low-mobility access', result: 'Reviewed' },
         { label: 'Choosing the best match to recommend', result: 'Riverview Stay Hotel' }
-      ], screenC1Result);
+      ], screenC1Result, { interval: 1500 });
     };
   }
 
