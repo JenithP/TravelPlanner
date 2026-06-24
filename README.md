@@ -12,8 +12,9 @@ assistant, built to run a between-subjects experiment on **AI autonomy level**.
 | **C3** | Control (no AI) | No AI. The user **searches, browses, and books** a stay manually. |
 
 All three conditions converge on the same booked stay (**Riverview Stay Hotel**,
-$142, non-refundable), then receive the same negative post-booking feedback, then a
-debriefing. There is **no survey** — this is the booking experience itself.
+$142, non-refundable), then a debriefing. There is **no survey** — this is the booking
+experience itself. (The negative post-booking review is delivered separately and is not
+part of this site's flow.)
 
 ## Running
 
@@ -43,8 +44,7 @@ The assigned condition label is shown on the final debrief screen.
 3. Confirm conditions
 4. **Condition-specific AI / search step** (C1 / C2 / C3)
 5. Booking confirmed
-6. Negative post-booking feedback (45 min away, stairs/hills, non-refundable)
-7. Debriefing → restart
+6. Debriefing → restart
 
 ## Images (optional)
 

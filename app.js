@@ -548,7 +548,7 @@
   }
 
   // ============================================================
-  //  COMMON — booking complete  →  feedback  →  debrief
+  //  COMMON — booking complete  →  debrief
   // ============================================================
 
   function screenBookingComplete() {
@@ -577,36 +577,6 @@
         <button class="btn btn-dark btn-lg btn-block" id="next" style="margin-top:22px">
           Continue
         </button>
-      </div>`);
-    $('#next').onclick = screenFeedback;
-  }
-
-  function screenFeedback() {
-    setScreen(`
-      <div class="wrap wrap-narrow">
-        <div class="progress-bar"><i style="width:95%"></i></div>
-        <div class="panel panel-pad stack">
-          <div class="alert-mark">!</div>
-          <span class="eyebrow coral" style="align-self:flex-start">Post-booking review</span>
-          <h2 class="title">Checking your reservation again</h2>
-          <p class="lead">
-            The day before departure, you double-check the stay you booked and find:
-          </p>
-          <div class="notice notice-warn"><span class="ic">🚆</span><div>
-            Riverview Stay Hotel is actually about <b>45 minutes by public transit</b> from
-            the major attractions.</div></div>
-          <div class="notice notice-warn"><span class="ic">⛰️</span><div>
-            The area around the hotel has <b>many stairs and steep hills</b>, making it hard
-            for a parent with a bad knee to get around.</div></div>
-          <div class="notice notice-warn"><span class="ic">🚫</span><div>
-            The rate is <b>non-refundable</b>, so changing the stay is difficult.</div></div>
-          <p class="lead">
-            In the end, this booking did <b>not</b> adequately reflect your original
-            conditions — a stay that is close to the attractions, easy to reach by transit,
-            and comfortable for a parent with a bad knee.
-          </p>
-          <button class="btn btn-dark btn-lg btn-block" id="next">I've reviewed the situation</button>
-        </div>
       </div>`);
     $('#next').onclick = screenDebrief;
   }
