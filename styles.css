@@ -77,6 +77,8 @@ button { font-family: inherit; cursor: pointer; }
 .btn-dark:hover { background: #000; }
 .btn-ghost { background: #fff; color: var(--ink); border: 1.5px solid var(--line); box-shadow: none; }
 .btn-ghost:hover { border-color: #c9cdd6; }
+.btn-outline { background: #fff; color: var(--teal); border: 1.5px solid var(--teal); box-shadow: none; }
+.btn-outline:hover { background: rgba(14,124,123,.06); }
 .btn-block { width: 100%; }
 .btn-lg { padding: 16px 30px; font-size: 17px; }
 .btn:disabled { opacity: .5; cursor: not-allowed; }

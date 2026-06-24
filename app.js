@@ -52,6 +52,28 @@
       refund: 'Free cancellation', img: 'gardenpark', grad: 'linear-gradient(135deg,#c79081,#dfa579)' }
   ];
 
+  // C1 advisory recommendation sequence. Rejecting a recommendation makes the
+  // assistant re-run its analysis and surface a different stay; each alternative
+  // has an honest drawback so the assistant ultimately converges back on the
+  // canonical stay (Riverview) as its final recommendation. The last entry has
+  // no further alternative, so it shows only Approve / Don't book.
+  const C1_RECS = [
+    { hotel: HOTEL, best: true, budget: '$142 ≤ $150 ✓',
+      note: "Based on your conditions, here's the stay I recommend. It's within " +
+            "budget, highly rated, and has positive family-trip reviews." },
+    { hotel: LISTINGS[3] /* Garden Park */, best: false, budget: '$135 ≤ $150 ✓',
+      note: "Here's another option. It's a little cheaper, but it's farther from " +
+            "the main attractions (~20 min), which could be harder for a parent " +
+            "with a bad knee." },
+    { hotel: LISTINGS[2] /* Hillside */, best: false, budget: '$98 ≤ $150 ✓',
+      note: "This is the most affordable option, but reviews mention stairs and a " +
+            "hilly area, and transit access is limited — not ideal for low mobility." },
+    { hotel: HOTEL, best: true, budget: '$142 ≤ $150 ✓',
+      note: "I looked again at the alternatives, but I still recommend the original " +
+            "stay — it's the best balance of budget, location, transit, and " +
+            "accessibility for your family." }
+  ];
+
   const PROMPT_TEXT =
     "We're a family of 3 (me and my parents) taking a 1-night, 2-day domestic trip. " +
     "One of my parents has a bad knee and can't walk far, so we need a place that's " +
@@ -287,19 +309,59 @@
         <div class="msg ai"><div class="who">AI</div>
           <div class="bub"><div class="steps" id="steps"></div></div></div>`);
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-      runSteps($('#steps'), [
-        { label: 'Reading your travel conditions', result: '3 guests · ≤ $150' },
-        { label: 'Comparing nearby stays', result: '12 candidates' },
-        { label: 'Checking budget fit', result: '$142 ≤ $150 ✓' },
-        { label: 'Checking transit & low-mobility access', result: 'Reviewed' },
-        { label: 'Choosing the best match to recommend', result: 'Riverview Stay Hotel' }
-      ], screenC1Result, { interval: 1500 });
+      runSteps($('#steps'), c1Steps(0), () => screenC1Result(0), { interval: 1500 });
     };
+  }
+
+  // Analysis steps for the C1 recommendation at the given index. Re-runs (after a
+  // rejection) are reworded to read as the assistant searching for another stay.
+  function c1Steps(idx) {
+    const rec = C1_RECS[idx];
+    const rerun = idx > 0;
+    return [
+      { label: 'Reading your travel conditions', result: '3 guests · ≤ $150' },
+      { label: rerun ? 'Comparing other nearby stays' : 'Comparing nearby stays', result: '12 candidates' },
+      { label: 'Checking budget fit', result: rec.budget },
+      { label: 'Checking transit & low-mobility access', result: 'Reviewed' },
+      { label: rerun ? 'Finding another stay to recommend' : 'Choosing the best match to recommend', result: rec.hotel.name }
+    ];
+  }
+
+  // Shown when the user rejects a recommendation: the assistant re-runs its
+  // analysis, then presents the next stay in the sequence.
+  function screenC1Rethink(idx) {
+    setScreen(`
+      <div class="wrap wrap-narrow">
+        <div class="progress-bar"><i style="width:65%"></i></div>
+        <div class="panel">
+          <div class="assistant-head">
+            <div class="ai-badge">✦</div>
+            <div class="meta">
+              <h3>Triply AI Recommendation Assistant</h3>
+              <span><span class="dot-live"></span> Advisory mode · you make the final decision</span>
+            </div>
+            <span class="res-status pending">Looking for another option</span>
+          </div>
+          <div class="chat-body" id="chat">
+            <div class="msg user"><div class="who">L</div>
+              <div class="bub">Hmm, I'd like to see a different option. Can you recommend another stay?</div></div>
+            <div class="msg ai"><div class="who">AI</div>
+              <div class="bub">Sure — let me reconsider and find another stay that fits your conditions.
+                <div class="steps" id="steps" style="margin-top:12px"></div></div></div>
+          </div>
+        </div>
+      </div>`);
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    runSteps($('#steps'), c1Steps(idx), () => screenC1Result(idx), { interval: 1500 });
   }
 
   // Recommendation + decision on one screen, framed as the AI handing the
   // decision back to the user and explicitly waiting for approval.
-  function screenC1Result() {
+  function screenC1Result(idx) {
+    idx = idx || 0;
+    const rec = C1_RECS[idx];
+    const h = rec.hotel;
+    const canReject = idx < C1_RECS.length - 1;
     setScreen(`
       <div class="wrap wrap-narrow">
         <div class="progress-bar"><i style="width:75%"></i></div>
@@ -316,18 +378,18 @@
             <div class="msg ai" style="max-width:100%">
               <div class="who">AI</div>
               <div class="bub">
-                Based on your conditions, here's the stay I recommend. It's within budget,
-                highly rated, and has positive family-trip reviews. I've prepared everything
-                for booking — but <b>I won't book it myself.</b> The final decision is yours.
+                ${rec.note} I've prepared everything for booking — but
+                <b>I won't book it myself.</b> The final decision is yours.
               </div>
             </div>
-            ${hotelCardFull(HOTEL, { best: true })}
+            ${hotelCardFull(h, { best: rec.best })}
             <div class="approval-box">
               <div class="approval-head"><span class="lock">🔒</span> Your approval required</div>
               <p>Triply AI will <b>not</b> reserve or charge anything until you approve.
                  Would you like to book this stay?</p>
               <div class="btn-row">
-                <button class="btn btn-primary btn-lg" id="book">✓ Approve &amp; book · ${usd(HOTEL.price)}</button>
+                <button class="btn btn-primary btn-lg" id="book">✓ Approve &amp; book · ${usd(h.price)}</button>
+                ${canReject ? `<button class="btn btn-outline btn-lg" id="reject">✕ Reject &amp; see another</button>` : ''}
                 <button class="btn btn-ghost btn-lg" id="exit">Don't book</button>
               </div>
             </div>
@@ -336,6 +398,7 @@
       </div>`);
     $('#book').onclick = () => { session.bookedBy = 'You'; screenBookingComplete(); };
     $('#exit').onclick = screenExit;
+    if (canReject) $('#reject').onclick = () => screenC1Rethink(idx + 1);
   }
 
   function screenExit() {
