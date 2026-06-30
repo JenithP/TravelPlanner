@@ -664,6 +664,28 @@
         </div>
       </div>`);
     $('#finish').onclick = () => location.assign(location.pathname);
+    showSurveyCode();
+  }
+
+  // Completion-code popup shown on the final screen. The code differs by
+  // autonomy condition so it can be matched back to the external survey.
+  const SURVEY_CODES = { 1: 'LW1234', 2: 'HH5678' };
+  function showSurveyCode() {
+    const code = SURVEY_CODES[session.condition];
+    if (!code) return; // no code for the control condition
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-icon">🔑</div>
+        <h3 class="modal-title" id="modalTitle">Your completion code</h3>
+        <p class="modal-text">Please return to the survey page and enter the following code:</p>
+        <div class="code-box">${code}</div>
+        <button class="btn btn-primary btn-block" id="modalOk">Confirm</button>
+      </div>`;
+    document.body.appendChild(overlay);
+    const close = () => overlay.remove();
+    $('#modalOk', overlay).onclick = close;
   }
 
   // ---------- util ----------
